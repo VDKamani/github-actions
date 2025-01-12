@@ -35,6 +35,7 @@ This workflow:
 - Automatically creates a release when a new tag is pushed.
 
 **File**: `create-release.yml`
+
 ---
 
 ### 5. **Scheduled Workflow to Clean Up Old Logs**
@@ -42,6 +43,7 @@ This workflow:
 - Runs every day at midnight to clean up old log files.
 
 **File**: `cleanup-log.yml`
+
 ---
 
 ### 6. **Multibranch : Branch wise relese**
@@ -49,6 +51,7 @@ This workflow:
 - Runs interms of perticular branch, when the mentioned branch runs it will runs as well.
 
 **File**: `multi_branch.yml`
+
 ---
 
 ### 5. **Docker deployment task**
@@ -56,6 +59,7 @@ This workflow:
 - Runs the whole CICD where it will build the docker image , upload it to AWS ECR and then it will deploy it on the given ec2 details in secrets.
 
 **File**: `docker_deployment.yml`
+
 ---
 
 ## How to Use
