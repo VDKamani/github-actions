@@ -1,0 +1,51 @@
+name: Branch Specific Workflow
+
+on:
+  push:
+    branches:
+      - dev
+      - stage
+      - pre-prod
+  workflow_dispatch:
+    inputs:
+      confirm_production:
+        description: 'Type "yes" to confirm running the Production step'
+        required: false
+        default: ''
+
+jobs:
+  dev:
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Dev Step
+        run: echo "Executing Dev step"
+
+  stage:
+    if: github.ref == 'refs/heads/stage'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Stage Step
+        run: echo "Executing Stage step"
+
+  pre-prod:
+    if: github.ref == 'refs/heads/pre-prod'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Pre-Prod Step
+        run: echo "Executing Pre-Prod step"
+
+  main:
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Confirmation for Production
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ "${{ github.event.inputs.confirm_production }}" != "yes" ]; then
+            echo "Production step not confirmed. Aborting."
+            exit 1
+          fi
+
+      - name: Run Production Step
+        run: echo "Executing Production step"

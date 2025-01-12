@@ -1,0 +1,30 @@
+name: Code Formatting Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Node.js and dependencies
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install Prettier
+        run: npm install --save-dev prettier
+
+      - name: Check formatting
+        run: npx prettier --check .
+
+      - name: Fix formatting
+        if: ${{ github.event_name == 'pull_request' }}
+        run: npx prettier --write .
+

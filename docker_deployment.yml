@@ -1,0 +1,86 @@
+name: Build and Push Docker to AWS ECR
+
+on:
+  push:
+    branches:
+      - main  # Trigger on pushes to the main branch
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    outputs:
+      image_uri: ${{ steps.export-image-uri.outputs.image_uri }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build Docker image
+        run: |
+          docker build -t my-image:latest .
+          IMAGE_URI=$(aws ecr describe-repositories --repository-names viral --query "repositories[0].repositoryUri" --output text)
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+
+      - name: Tag Docker image
+        run: |
+          docker tag my-image:latest $IMAGE_URI:latest
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push $IMAGE_URI:latest
+
+      - name: Export IMAGE_URI
+        id: export-image-uri
+        run: echo "::set-output name=image_uri::$IMAGE_URI"
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Debug SSH connection
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          debug: true
+          script: |
+            echo "SSH connection successful!"
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            IMAGE_URI=476659480876.dkr.ecr.ap-south-1.amazonaws.com/viral
+
+
+            aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $IMAGE_URI
+            
+            docker pull $IMAGE_URI:latest
+
+            if [ "$(docker ps -q -f name=html-app)" ]; then
+                docker stop html-app
+                docker rm html-app
+            fi
+            
+            
+            if [ "$(docker ps -aq -f name=html-app)" ]; then
+                docker rm html-app
+            fi
+            
+            docker run -d --name html-app -p 80:80 $IMAGE_URI:latest
+
