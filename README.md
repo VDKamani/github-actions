@@ -54,11 +54,19 @@ This workflow:
 
 ---
 
-### 5. **Docker deployment task**
+### 7. **Docker deployment task**
 This workflow:
 - Runs the whole CICD where it will build the docker image , upload it to AWS ECR and then it will deploy it on the given ec2 details in secrets.
 
 **File**: `docker_deployment.yml`
+
+---
+
+### 8. **linkdin demo**
+This workflow:
+- This is the demo file uploded to show the basic CI/CD function of Node Project.
+
+**File**: `linkdin_demo.yml`
 
 ---
 
